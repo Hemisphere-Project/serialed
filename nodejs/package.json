@@ -1,0 +1,15 @@
+{
+  "name": "ledmatrix",
+  "version": "1.0.0",
+  "description": "",
+  "main": "usbserial.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "npm": "^6.5.0",
+    "serialport": "^7.1.1"
+  }
+}
