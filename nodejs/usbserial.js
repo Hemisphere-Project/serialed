@@ -20,7 +20,7 @@ class ESPNode extends EventEmitter {
   start() {
     var that = this;
 
-    this.port = new SerialPort(this.path, { baudRate: 921600 }) //460800 //921600
+    this.port = new SerialPort(this.path, { baudRate: 921600 }) //460800 //921600 //1843200
     this.parser = this.port.pipe(new Readline({ delimiter: '\n' }))
 
     this.port.on('error', function(err) {
@@ -143,15 +143,15 @@ node0.benchmark()
 node0.verbose()
 node0.start()
 
-var node1 = new ESPNode('/dev/ttyUSB1')
-node1.benchmark()
-node1.verbose()
-node1.start()
-
-var node2 = new ESPNode('/dev/ttyUSB2')
-node2.benchmark()
-node2.verbose()
-node2.start()
+// var node1 = new ESPNode('/dev/ttyUSB1')
+// node1.benchmark()
+// node1.verbose()
+// node1.start()
+//
+// var node2 = new ESPNode('/dev/ttyUSB2')
+// node2.benchmark()
+// node2.verbose()
+// node2.start()
 
 
 

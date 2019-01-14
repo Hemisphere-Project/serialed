@@ -32,7 +32,7 @@ void setup()
   btStop();
 
   // UPLINK
-  Serial.begin(921600);
+  Serial.begin(2000000);
   Serial.println("");
 
   // RMT init
@@ -58,6 +58,7 @@ void loop()
     digitalWrite(LED_BUILTIN, HIGH);
     delay(2);
     digitalWrite(LED_BUILTIN, LOW);
+    Serial.println("PING");
   }
 
   // Uplink RECV
