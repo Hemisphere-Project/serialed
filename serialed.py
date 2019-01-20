@@ -5,7 +5,7 @@ from functools import reduce
 from random import randint
 import serial
 
-INC = 0
+FRAMESIZE = (256*3*2+3)
 
 class ESPNode:
     def __init__(self, path, baudrate=12000000, verbose=False):
@@ -21,6 +21,12 @@ class ESPNode:
         self.watchdogThread = threading.Thread(target=self.watchESP)
 
         self._stop_event = threading.Event()
+           
+        self.frame = bytearray( FRAMESIZE )
+        self.frame[0] = 253
+        self.frame[FRAMESIZE-2] = 254
+        self.frame[FRAMESIZE-1] = 255
+        
 
     def start(self):
         if self.path.startswith('ftdi'):
@@ -82,20 +88,8 @@ class ESPNode:
             self.fpsMetrics.pop(0)
             self.lastTime = now
 
-            global INC
-            INC += 10
-
             # Prepare buffers
-            DATASIZE = 256*3*2
-            buffer = [253]                       # FRAME init
-            for k in range(DATASIZE):
-                val = (k*4+INC)%100
-                if val > 20:
-                    val = 0
-                buffer.append( val )             # RGB data
-            buffer.append(254)                   # FRAME end
-            buffer.append(255)                   # MSG end
-            self.port.write(bytearray(buffer))
+            self.port.write( self.frame )
             # time.sleep(0.10)
             self.port.flush()
             if self.verbose:
@@ -115,11 +109,11 @@ VERBOSE = False
 # START
 #
 nodes = [None]*5
-nodes[0] = ESPNode('ftdi://ftdi:4232h/1', baudrate=921600, verbose=True)
-# nodes[1] = ESPNode('ftdi://ftdi:4232h/2', baudrate=921600, verbose=VERBOSE)
-# nodes[2] = ESPNode('ftdi://ftdi:4232h/3', baudrate=921600, verbose=VERBOSE)
-# nodes[3] = ESPNode('ftdi://ftdi:4232h/4', baudrate=921600, verbose=VERBOSE)
-# nodes[4] = ESPNode('ftdi://ftdi:232h/1',  baudrate=921600, verbose=VERBOSE)
+nodes[0] = ESPNode('ftdi://ftdi:4232h/1', baudrate=921600, verbose=VERBOSE)
+nodes[1] = ESPNode('ftdi://ftdi:4232h/2', baudrate=921600, verbose=VERBOSE)
+nodes[2] = ESPNode('ftdi://ftdi:4232h/3', baudrate=921600, verbose=VERBOSE)
+nodes[3] = ESPNode('ftdi://ftdi:4232h/4', baudrate=921600, verbose=VERBOSE)
+nodes[4] = ESPNode('ftdi://ftdi:232h/1',  baudrate=921600, verbose=VERBOSE)
 
 for n in nodes:
     n.start()
@@ -138,7 +132,7 @@ signal.signal(signal.SIGINT, quit)
 #
 RUN = True
 while RUN:
-    time.sleep(1)
+    time.sleep(2)
     for i, n in enumerate(nodes):
         print('Node '+str(i+1)+' FPS =', n.getFPS())
     print('-----------------------------')

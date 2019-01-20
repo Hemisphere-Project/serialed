@@ -3,7 +3,7 @@ Description=Serial LED matrix driver
            
 [Service]
 Type=simple
-ExecStart=/usr/bin/python /root/serialed.py
+ExecStart=/usr/bin/python /root/serialed/serialed.py
 Restart=always
            
 [Install]
