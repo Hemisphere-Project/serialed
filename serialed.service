@@ -1,0 +1,10 @@
+[Unit]
+Description=Serial LED matrix driver
+           
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /root/serialed.py
+Restart=always
+           
+[Install]
+WantedBy=default.target
