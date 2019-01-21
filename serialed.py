@@ -22,6 +22,7 @@ class ESPNode:
         self.frameMutex = threading.Lock()
         self.run = False
         self._stop_event = threading.Event()
+        self.readyForNext = False
 
         # TEST
         self.inc = 0
@@ -115,9 +116,10 @@ class ESPNode:
             self.dogFeed = True
             if b == "\n":
                 if self.verbose:
-                    self.say( 'recv', line)
+                    self.say( 'read', line)
                 if line == 'WAIT' or line.startswith('DRAW') :
-                    self.updateESP()
+                    self.readyForNext = True
+                    self.say('next')
                 elif line.startswith('ERROR'):
                     # self.stop()
                     pass
@@ -152,8 +154,13 @@ class ESPNode:
 
     # Copy Frame Buffer
     def draw(self, frame=None):
-        with self.frameMutex:
-            self.frameOutput[1:FRAMESIZE+1] = self.frameInput
+        if frame:
+            self.set(frame)
+        else:
+            with self.frameMutex:
+                self.frameOutput[1:FRAMESIZE+1] = self.frameInput
+            if self.readyForNext:
+                self.updateESP()
 
     def led(self, led, red, green, blue):
         if led >= 512: return
@@ -172,6 +179,9 @@ class ESPNode:
         # else: print(all)
         with self.frameMutex:
             self.frameInput[:] = frame
+            self.frameOutput[1:FRAMESIZE+1] = self.frameInput
+        if self.readyForNext:
+            self.updateESP()
 
     def blackout(self):
         with self.frameMutex:

@@ -6,6 +6,7 @@ class SerialNode extends EventEmitter {
     super()
     this.open = true
     this.ready = false
+    this.next = false
     this.fps = 0
     this.path = path
 
@@ -26,6 +27,10 @@ class SerialNode extends EventEmitter {
         else if (data[1] == 'ready') {
           this.ready = true
           this.emit('ready')
+        }
+        else if (data[1] == 'next') {
+          this.next = true
+          this.emit('next')
         }
         else if (data[1] == 'FPS') {
           this.fps = parseFloat(data[2])
@@ -77,15 +82,10 @@ class SerialNode extends EventEmitter {
     this.frame.fill(0)
   }
 
-  update() {
-    if (this.ready)
-      this.send("frame " + this.frame.map(String).join(' '));
-      // console.log("frame " + this.frame.map(String).join(' '))
-  }
-
   draw() {
+    this.next = false
     if (this.ready)
-      this.send("draw");
+      this.send("frame " + this.frame.map(String).join(' '))
   }
 
 }
@@ -94,6 +94,7 @@ class SerialNode extends EventEmitter {
 class SerialedController extends EventEmitter {
   constructor() {
     super()
+    var that = this
 
     this.esp = []
     this.esp[0] = new SerialNode('ftdi://ftdi:4232h/1');
@@ -101,6 +102,17 @@ class SerialedController extends EventEmitter {
     this.esp[2] = new SerialNode('ftdi://ftdi:4232h/3');
     this.esp[3] = new SerialNode('ftdi://ftdi:4232h/4');
     this.esp[4] = new SerialNode('ftdi://ftdi:232h/1');
+
+    for(var esp of this.esp)
+      esp.on('next', ()=>{
+        var ok = true
+        for(var e of that.esp) ok = ok && e.next
+        if (ok) that.emit('next')
+      })
+
+    this.on('next', ()=>{
+      that.draw()
+    })
   }
 
   pixel(x, y, r, g, b) {
@@ -111,10 +123,7 @@ class SerialedController extends EventEmitter {
 
   draw() {
     for(var esp of this.esp) esp.draw()
-  }
-
-  update() {
-    for(var esp of this.esp) esp.update()
+    this.emit('draw')
   }
 
   clear() {
@@ -148,9 +157,12 @@ setInterval(()=>{
     X = (X+1)%(32)
     ctrl.clear()
     for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
-    ctrl.update()
-    ctrl.draw()
-  }, 30)
+  }, 25)
+// ctrl.on('next', ()=>{
+//     X = (X+2)%(32)
+//     ctrl.clear()
+//     for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
+// })
 
 
 process.on('SIGINT', function() {

@@ -31,7 +31,7 @@ void flb_draw( void * pvParameters ) {
       if (newFrame) {
 
         // Copy buffer to main frame
-        for(int x = 0; x < NR_PANELS; x++) 
+        for(int x = 0; x < NR_PANELS; x++)
           for(int y = 0; y < NR_LEDS; y++)
             leds[x][y] = CRGB(framebuffer[(x*NR_LEDS+y)*3+1], framebuffer[(x*NR_LEDS+y)*3+2], framebuffer[(x*NR_LEDS+y)*3+3]);
 
