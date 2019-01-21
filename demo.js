@@ -42,8 +42,8 @@ function printFPS() {
 
 // START DEMO
 printFPS()
-animHorizon()
-// animVertic()
+// animHorizon()
+animVertic()
 
 // PROPERLY CLOSE
 process.on('SIGINT', function() {
