@@ -18,7 +18,7 @@ function animVertic() {
 
 
 /* HORIZONTAL
- go to next col every 20ms
+ go to next col every 50ms
  in this exemple speed is independant to FPS !
 */
 var X = 0
@@ -40,13 +40,13 @@ function printFPS() {
 }
 
 
-// START
+// START DEMO
 printFPS()
 animHorizon()
 // animVertic()
 
 // PROPERLY CLOSE
 process.on('SIGINT', function() {
+    RUN = false
     ctrl.close()
-    RUN =
 });
