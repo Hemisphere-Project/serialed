@@ -1,0 +1,19 @@
+{
+  "name": "serialed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "serialed.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hemisphere-Project/serialed.git"
+  },
+  "author": "Hemisphere Project",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hemisphere-Project/serialed/issues"
+  },
+  "homepage": "https://github.com/Hemisphere-Project/serialed#readme"
+}
