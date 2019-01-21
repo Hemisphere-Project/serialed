@@ -24,7 +24,10 @@ bool com_loop() {
 
   // RECEIVE
   readSize = Serial.readBytesUntil(BYTE_MSG_END, framebuffer, BUFFERSIZE);
-  if (readSize == 0) return false;
+  if (readSize == 0) {
+    Serial.print("WAIT\n");
+    return false;
+  }
   lastPing = millis();
 
   // ECHO

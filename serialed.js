@@ -4,6 +4,8 @@ const EventEmitter = require('events');
 class SerialNode extends EventEmitter {
   constructor(path) {
     super()
+    var that = this
+
     this.open = true
     this.ready = false
     this.next = false
@@ -18,26 +20,8 @@ class SerialNode extends EventEmitter {
 
     this.process.stdout.on('data', (data) => {
       // console.log(`stdout: ${data}`);
-      data = String(data).trim().split(" ")
-      if (data.length > 1) {
-        if (data[1] == 'reset') {
-          this.ready = false
-          this.emit('reset')
-        }
-        else if (data[1] == 'ready') {
-          this.ready = true
-          this.emit('ready')
-        }
-        else if (data[1] == 'next') {
-          this.next = true
-          this.emit('next')
-        }
-        else if (data[1] == 'FPS') {
-          this.fps = parseFloat(data[2])
-          this.emit('fps', this.fps)
-          console.log(this.path, this.fps)
-        }
-      }
+      data = String(data).trim().split("\n")
+      for(var d of data) that.parseData(d)
     });
 
     this.process.stderr.on('data', (data) => {
@@ -49,6 +33,30 @@ class SerialNode extends EventEmitter {
       this.open = false
       this.emit('close')
     });
+  }
+
+  parseData(data) {
+    data = data.trim().split(" ")
+    if (data.length > 1) {
+      if (data[1] == 'reset') {
+        this.ready = false
+        this.emit('reset')
+      }
+      else if (data[1] == 'ready') {
+        this.ready = true
+        this.emit('ready')
+      }
+      else if (data[1] == 'next') {
+        this.next = true
+        this.emit('next')
+      }
+      else if (data[1] == 'FPS') {
+        this.fps = parseFloat(data[2])
+        this.emit('fps', this.fps)
+        // console.log(this.path, this.fps)
+      }
+      // else console.log(data)
+    }
   }
 
   send(msg) {
@@ -135,6 +143,11 @@ class SerialedController extends EventEmitter {
     for(var esp of this.esp) esp.close()
   }
 
+  fps() {
+    var f = 1000
+    for(var esp of this.esp) if (esp.fps < f) f = esp.fps
+    return f
+  }
 }
 
 
@@ -159,6 +172,11 @@ ctrl.on('next', ()=>{
 //     ctrl.clear()
 //     for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
 //   }, 50)
+
+// FPS
+setInterval(()=>{
+  console.log('FPS', ctrl.fps())
+}, 2000)
 
 process.on('SIGINT', function() {
     ctrl.close()
