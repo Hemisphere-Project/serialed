@@ -112,6 +112,7 @@ class SerialedController extends EventEmitter {
     this.esp[3] = new SerialNode('ftdi://ftdi:4232h/4');
     this.esp[4] = new SerialNode('ftdi://ftdi:232h/1');
 
+    // Detect when all esp are ready to draw
     for(var esp of this.esp)
       esp.on('next', ()=>{
         var ok = true
@@ -119,30 +120,31 @@ class SerialedController extends EventEmitter {
         if (ok) that.emit('next')
       })
 
+    // trigger next draw when everyone is ready
     this.on('next', ()=>{
-      that.draw()
+      for(var esp of that.esp) esp.draw()
+      that.emit('draw')
     })
   }
 
+  // set a pixel
   pixel(x, y, r, g, b) {
     y = 16*5-1-y  // Y = 0 on top
     var e = Math.floor(y/16) % (this.esp.length)
       this.esp[e].pixel(x, (y%16), r, g, b)
   }
 
-  draw() {
-    for(var esp of this.esp) esp.draw()
-    this.emit('draw')
-  }
-
+  // clear all pixels
   clear() {
     for(var esp of this.esp) esp.clear()
   }
 
+  // close interfaces
   close() {
     for(var esp of this.esp) esp.close()
   }
 
+  // get lower FPS
   fps() {
     var f = 1000
     for(var esp of this.esp) if (esp.fps < f) f = esp.fps
@@ -150,34 +152,4 @@ class SerialedController extends EventEmitter {
   }
 }
 
-
-
-
-
-ctrl = new SerialedController()
-
-// VERTICAL
-var Y = 0
-ctrl.on('next', ()=>{
-  Y = (Y+1)%(5*16)
-  ctrl.clear()
-  for (var x=0; x<32; x++) ctrl.pixel(x,Y,10,10,10)
-})
-
-
-// HORIZONTAL
-// var X = 0
-// setInterval(()=>{
-//     X = (X+1)%(32)
-//     ctrl.clear()
-//     for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
-//   }, 50)
-
-// FPS
-setInterval(()=>{
-  console.log('FPS', ctrl.fps())
-}, 2000)
-
-process.on('SIGINT', function() {
-    ctrl.close()
-});
+module.exports = SerialedController
