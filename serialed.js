@@ -35,6 +35,7 @@ class SerialNode extends EventEmitter {
         else if (data[1] == 'FPS') {
           this.fps = parseFloat(data[2])
           this.emit('fps', this.fps)
+          console.log(this.path, this.fps)
         }
       }
     });
@@ -143,27 +144,21 @@ class SerialedController extends EventEmitter {
 ctrl = new SerialedController()
 
 // VERTICAL
-// var Y = 0
-// setInterval(()=>{
-//     Y = (Y+1)%(5*16)
-//     ctrl.clear()
-//     for (var x=0; x<32; x++) ctrl.pixel(x,Y,10,10,10)
-//     ctrl.draw()
-//   }, 50)
+var Y = 0
+ctrl.on('next', ()=>{
+  Y = (Y+1)%(5*16)
+  ctrl.clear()
+  for (var x=0; x<32; x++) ctrl.pixel(x,Y,10,10,10)
+})
+
 
 // HORIZONTAL
-var X = 0
-setInterval(()=>{
-    X = (X+1)%(32)
-    ctrl.clear()
-    for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
-  }, 25)
-// ctrl.on('next', ()=>{
-//     X = (X+2)%(32)
+// var X = 0
+// setInterval(()=>{
+//     X = (X+1)%(32)
 //     ctrl.clear()
 //     for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
-// })
-
+//   }, 50)
 
 process.on('SIGINT', function() {
     ctrl.close()
