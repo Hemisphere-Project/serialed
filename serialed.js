@@ -55,7 +55,7 @@ class SerialNode extends EventEmitter {
         this.emit('fps', this.fps)
         // console.log(this.path, this.fps)
       }
-      // else console.log(data)
+      else console.log(data)
     }
   }
 

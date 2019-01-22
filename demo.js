@@ -11,8 +11,15 @@ var Y = 0
 function animVertic() {
   ctrl.on('next', ()=>{
     Y = (Y+1)%(5*16)
+    X = (X+1)%(32)
+
     ctrl.clear()
     for (var x=0; x<32; x++) ctrl.pixel(x,Y,10,10,10)
+    for (var x=0; x<32; x++) ctrl.pixel(x,(Y*2)%80,10,0,0)
+    for (var x=0; x<32; x++) ctrl.pixel(x,(79-Math.round(Y/2)),0,0,10)
+    for (var x=0; x<32; x++) ctrl.pixel(x,(79-(Y*2)%80),10,0,0)
+    for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,0)
+    for (var y=0; y<(5*16); y++) ctrl.pixel(31-(X*2)%32,y,0,0,10)
   })
 }
 
