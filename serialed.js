@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const EventEmitter = require('events');
+const pathUtils = require('path')
 
 class SerialNode extends EventEmitter {
   constructor(path) {
@@ -15,7 +16,7 @@ class SerialNode extends EventEmitter {
     this.frame = new Array(512*3)
     this.frame.fill(0)
 
-    this.process = spawn('python3', ['serialed.py', this.path]);
+    this.process = spawn('python3', [pathUtils.join(__dirname, 'serialed.py'), this.path]);
     this.process.stdin.setEncoding('utf-8');
 
     this.process.stdout.on('data', (data) => {
