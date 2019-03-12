@@ -11,14 +11,21 @@ var Y = 0
 function animVertic() {
   ctrl.on('next', ()=>{
     Y = (Y+1)%(5*16)
+    X = (X+1)%(32)
+
     ctrl.clear()
     for (var x=0; x<32; x++) ctrl.pixelMatrix(x,Y,10,10,10)
+    for (var x=0; x<32; x++) ctrl.pixelMatrix(x,(Y*2)%80,10,0,0)
+    for (var x=0; x<32; x++) ctrl.pixelMatrix(x,(79-Math.round(Y/2)),0,0,10)
+    for (var x=0; x<32; x++) ctrl.pixelMatrix(x,(79-(Y*2)%80),10,0,0)
+    for (var y=0; y<(5*16); y++) ctrl.pixelMatrix(X,y,10,10,0)
+    for (var y=0; y<(5*16); y++) ctrl.pixelMatrix(31-(X*2)%32,y,0,0,10)
   })
 }
 
 
 /* HORIZONTAL
- go to next col every 20ms
+ go to next col every 50ms
  in this exemple speed is independant to FPS !
 */
 var X = 0
@@ -40,13 +47,13 @@ function printFPS() {
 }
 
 
-// START
+// START DEMO
 printFPS()
-animHorizon()
-// animVertic()
+// animHorizon()
+animVertic()
 
 // PROPERLY CLOSE
 process.on('SIGINT', function() {
-    ctrl.close()
     RUN = false
+    ctrl.close()
 });
