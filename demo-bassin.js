@@ -1,5 +1,5 @@
-const SerialedController = require('./serialed.js');
-ctrl = new SerialedController()
+const Serialed = require('./serialed.js')
+ctrl = new Serialed.SerialedBassin()
 
 RUN = true
 
@@ -12,7 +12,7 @@ function animVertic() {
   ctrl.on('next', ()=>{
     Y = (Y+1)%(5*16)
     ctrl.clear()
-    for (var x=0; x<32; x++) ctrl.pixel(x,Y,10,10,10)
+    for (var x=0; x<32; x++) ctrl.pixelMatrix(x,Y,10,10,10)
   })
 }
 
@@ -26,7 +26,7 @@ function animHorizon() {
   setTimeout(()=>{
       X = (X+1)%(32)
       ctrl.clear()
-      for (var y=0; y<(5*16); y++) ctrl.pixel(X,y,10,10,10)
+      for (var y=0; y<(5*16); y++) ctrl.pixelMatrix(X,y,10,10,10)
       if (RUN) animHorizon()
     }, 50)
 }
@@ -48,5 +48,5 @@ animHorizon()
 // PROPERLY CLOSE
 process.on('SIGINT', function() {
     ctrl.close()
-    RUN =
+    RUN = false
 });

@@ -5,7 +5,6 @@ from select import select
 from functools import reduce
 import serial
 
-FRAMESIZE = (256*3*2)
 BENCHSIZE = 40
 
 def colorClamp(color):
@@ -15,7 +14,7 @@ def colorClamp(color):
     return color
 
 class ESPNode:
-    def __init__(self, path, baudrate, verbose=False):
+    def __init__(self, path, nPixels, baudrate, verbose=False):
         self.path = path
         self.baudrate = baudrate
         self.verbose = verbose
@@ -23,6 +22,7 @@ class ESPNode:
         self.run = False
         self._stop_event = threading.Event()
         self.readyForNext = False
+        self.framesize = int(nPixels)*3
 
         # TEST
         self.inc = 0
@@ -42,11 +42,11 @@ class ESPNode:
         self.watchdogThread = threading.Thread(target=self.watchESP)
 
         # FRAME BUFFERS
-        self.frameInput = bytearray( FRAMESIZE )
-        self.frameOutput = bytearray( FRAMESIZE+3 )
+        self.frameInput = bytearray( self.framesize )
+        self.frameOutput = bytearray( self.framesize+3 )
         self.frameOutput[0] = 253
-        self.frameOutput[FRAMESIZE+1] = 254
-        self.frameOutput[FRAMESIZE+2] = 255
+        self.frameOutput[self.framesize+1] = 254
+        self.frameOutput[self.framesize+2] = 255
 
 
     def start(self):
@@ -158,7 +158,7 @@ class ESPNode:
             self.set(frame)
         else:
             with self.frameMutex:
-                self.frameOutput[1:FRAMESIZE+1] = self.frameInput
+                self.frameOutput[1:self.framesize+1] = self.frameInput
             if self.readyForNext:
                 self.updateESP()
 
@@ -179,13 +179,13 @@ class ESPNode:
         # else: print(all)
         with self.frameMutex:
             self.frameInput[:] = frame
-            self.frameOutput[1:FRAMESIZE+1] = self.frameInput
+            self.frameOutput[1:self.framesize+1] = self.frameInput
         if self.readyForNext:
             self.updateESP()
 
     def blackout(self):
         with self.frameMutex:
-            self.frameInput = bytearray( FRAMESIZE )
+            self.frameInput = bytearray( self.framesize )
         self.draw()
 
     def test(self, enable):
@@ -193,10 +193,10 @@ class ESPNode:
         if not self.testMode: return
         with self.frameMutex:
             self.frameInput[self.inc] = 0
-            self.frameInput[FRAMESIZE-(self.inc+1)] = 0
+            self.frameInput[self.framesize-(self.inc+1)] = 0
             self.inc = (self.inc+1)%(768)
             self.frameInput[self.inc] = 10
-            self.frameInput[FRAMESIZE-(self.inc+1)] = 10
+            self.frameInput[self.framesize-(self.inc+1)] = 10
 
     def getFPS(self):
         return round(reduce(lambda x, y: x + y, self.fpsMetrics) / len(self.fpsMetrics), 1)
@@ -207,9 +207,9 @@ VERBOSE = False
 # START
 #
 NODE = None
-if len(sys.argv) > 1:
-    NODE = ESPNode(sys.argv[1], baudrate=921600, verbose=VERBOSE)
-    if len(sys.argv) > 2 and sys.argv[2] == '0':
+if len(sys.argv) > 2:
+    NODE = ESPNode(sys.argv[1], sys.argv[2], baudrate=921600, verbose=VERBOSE)
+    if len(sys.argv) > 3 and sys.argv[3] == '0':
         NODE.statusMode = False
     try:
         NODE.start()
@@ -217,7 +217,7 @@ if len(sys.argv) > 1:
         NODE.say('ERROR: device not found', sys.argv[1])
         sys.exit(1)
 else:
-    print('ERROR: no device path provided.')
+    print('ERROR: no device path / pixel size provided.')
     sys.exit(1)
 
 #

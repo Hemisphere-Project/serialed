@@ -1,14 +1,20 @@
 #include <WiFi.h>
+
+/* CONFIG */
+
 #define BAUDRATE 921600
+//#define BRIGHTNESS 10
+#define NR_OUTPUTS 1
+#define NR_LEDS   150
 
-#define NR_PANELS 2
-#define NR_LEDS   256
+/**/
 
-#define FRAMESIZE (NR_PANELS*NR_LEDS*3)
+#define FRAMESIZE (NR_OUTPUTS*NR_LEDS*3)
 #define BUFFERSIZE (FRAMESIZE+32)
 
 byte framebuffer[BUFFERSIZE];
 bool newFrame = false;
+
 
 void setup() {
 

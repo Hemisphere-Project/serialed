@@ -33,7 +33,7 @@ bool com_loop() {
   // ECHO
   // Serial.print("GOT "+String(readSize)+" bytes: ");
   // for (int k=0; k<(readSize); k+=1) {
-  //   Serial.print(data[k]);
+  //   Serial.print(framebuffer[k]);
   //   Serial.print(" ");
   // }
   // Serial.print("\n");

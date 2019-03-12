@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const EventEmitter = require('events');
 
 class SerialNode extends EventEmitter {
-  constructor(path) {
+  constructor(path, nPixels) {
     super()
     var that = this
 
@@ -11,11 +11,12 @@ class SerialNode extends EventEmitter {
     this.next = false
     this.fps = 0
     this.path = path
+    this.nPixels = nPixels
 
-    this.frame = new Array(512*3)
+    this.frame = new Array(nPixels*3)
     this.frame.fill(0)
 
-    this.process = spawn('python3', ['serialed.py', this.path]);
+    this.process = spawn('python3', ['serialed.py', this.path, this.nPixels]);
     this.process.stdin.setEncoding('utf-8');
 
     this.process.stdout.on('data', (data) => {
@@ -47,6 +48,10 @@ class SerialNode extends EventEmitter {
         this.emit('ready')
       }
       else if (data[1] == 'next') {
+        if (!this.ready) {
+          this.ready = true
+          this.emit('ready')
+        }
         this.next = true
         this.emit('next')
       }
@@ -55,7 +60,7 @@ class SerialNode extends EventEmitter {
         this.emit('fps', this.fps)
         // console.log(this.path, this.fps)
       }
-      // else console.log(data)
+      else console.log(data)
     }
   }
 
@@ -68,12 +73,12 @@ class SerialNode extends EventEmitter {
     this.send("quit");
   }
 
-  pixel(x, y, red, green, blue) {
+  pixelMatrix(x, y, red, green, blue) {
     var led = 0
 
     x = x%32
-    if (x > 15) {
-      led = 256
+    while (x > 15) {
+      led += 256
       x -= 16
     }
 
@@ -82,6 +87,12 @@ class SerialNode extends EventEmitter {
     if ((x % 2) === 1) led += x*16+15-y
     else led += y+x*16
 
+    this.frame[led*3] = red;
+    this.frame[led*3+1] = green;
+    this.frame[led*3+2] = blue;
+  }
+
+  led(led, red, green, blue) {
     this.frame[led*3] = red;
     this.frame[led*3+1] = green;
     this.frame[led*3+2] = blue;
@@ -100,25 +111,15 @@ class SerialNode extends EventEmitter {
 }
 
 
+/*
+ *  Controller - Generic controller
+ */
 class SerialedController extends EventEmitter {
   constructor() {
     super()
     var that = this
 
     this.esp = []
-    this.esp[0] = new SerialNode('ftdi://ftdi:4232h/1');
-    this.esp[1] = new SerialNode('ftdi://ftdi:4232h/2');
-    this.esp[2] = new SerialNode('ftdi://ftdi:4232h/3');
-    this.esp[3] = new SerialNode('ftdi://ftdi:4232h/4');
-    this.esp[4] = new SerialNode('ftdi://ftdi:232h/1');
-
-    // Detect when all esp are ready to draw
-    for(var esp of this.esp)
-      esp.on('next', ()=>{
-        var ok = true
-        for(var e of that.esp) ok = ok && e.next
-        if (ok) that.emit('next')
-      })
 
     // trigger next draw when everyone is ready
     this.on('next', ()=>{
@@ -127,11 +128,42 @@ class SerialedController extends EventEmitter {
     })
   }
 
-  // set a pixel
-  pixel(x, y, r, g, b) {
-    y = 16*5-1-y  // Y = 0 on top
-    var e = Math.floor(y/16) % (this.esp.length)
-      this.esp[e].pixel(x, (y%16), r, g, b)
+  addNode(path, nPixels) {
+    var that = this
+
+    var esp = new SerialNode(path, nPixels)
+
+    // Detect when all esp are ready to draw
+    esp.on('next', ()=>{
+        var ok = true
+        for(var e of that.esp) ok = ok && e.next
+        if (ok) that.emit('next')
+      })
+
+    this.esp.push(esp)
+  }
+
+  node(i) {
+    return this.esp[i];
+  }
+
+  totalPixels() {
+    var n = 0
+    for(var e of this.esp) n += e.nPixels
+    return n
+  }
+
+  led(n, r, g, b) {
+    n = n % this.totalPixels()
+
+    for(var e of this.esp) {
+      if (n < e.nPixels) {
+        e.led(n, r, g, b)
+        break;
+      }
+      else n -= e.nPixels
+    }
+
   }
 
   // clear all pixels
@@ -150,6 +182,33 @@ class SerialedController extends EventEmitter {
     for(var esp of this.esp) if (esp.fps < f) f = esp.fps
     return f
   }
+
 }
 
-module.exports = SerialedController
+
+/*
+ *  Controller - Bassin v1 specific
+ */
+class SerialedBassin extends SerialedController {
+  constructor() {
+    super()
+
+    this.addNode('ftdi://ftdi:4232h/1', 512)
+    this.addNode('ftdi://ftdi:4232h/2', 512)
+    this.addNode('ftdi://ftdi:4232h/3', 512)
+    this.addNode('ftdi://ftdi:4232h/4', 512)
+    this.addNode('ftdi://ftdi:232h/1', 512)
+  }
+
+  // set a pixel
+  pixelMatrix(x, y, r, g, b) {
+    y = 16*5-1-y  // Y = 0 on top
+    var e = Math.floor(y/16) % (this.esp.length)
+      this.esp[e].pixelMatrix(x, (y%16), r, g, b)
+  }
+}
+
+
+
+module.exports.SerialedController = SerialedController
+module.exports.SerialedBassin = SerialedBassin
