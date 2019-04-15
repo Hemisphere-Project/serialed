@@ -4,7 +4,7 @@ ctrl = new Serialed.SerialedController()
 RUN = true
 NPIX = 150
 
-ctrl.addNode('/dev/ttyUSB2', NPIX)
+ctrl.addNode('artnet://192.168.43.240', NPIX)
 
 
 /* CHASER FPS
@@ -32,7 +32,7 @@ function animChaser_FIXED() {
     currentLedFIXED = (currentLedFIXED+1)%NPIX
     ctrl.led( currentLedFIXED,100,100,100 )
     if (RUN) animChaser_FIXED()
-  }, 60)
+  }, 40)
 }
 
 
@@ -48,8 +48,8 @@ function printFPS() {
 
 // START
 printFPS()
-//animChaser_FPS()
-animChaser_FIXED()
+animChaser_FPS()
+//animChaser_FIXED()
 
 // PROPERLY CLOSE
 process.on('SIGINT', function() {

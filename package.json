@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Hemisphere-Project/serialed/issues"
   },
-  "homepage": "https://github.com/Hemisphere-Project/serialed#readme"
+  "homepage": "https://github.com/Hemisphere-Project/serialed#readme",
+  "dependencies": {
+    "artnet": "^1.4.0"
+  }
 }

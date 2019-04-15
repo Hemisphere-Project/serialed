@@ -3,7 +3,6 @@
 /* CONFIG */
 
 #define BAUDRATE 921600
-//#define BRIGHTNESS 10
 #define NR_OUTPUTS 1
 #define NR_LEDS   150
 

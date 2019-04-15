@@ -2,6 +2,69 @@ const { spawn } = require('child_process');
 const EventEmitter = require('events');
 const pathUtils = require('path')
 
+// ESP via Artnet over Wifi
+class ArtnetNode extends EventEmitter {
+  constructor(path, nPixels) {
+    super()
+    var that = this
+
+    this.next = false
+    this.path = path
+    this.nPixels = nPixels
+    
+    var options = { host: this.path }
+    this.artnet = require('artnet')(options);
+
+    this.frame = new Array(nPixels*3)
+    this.frame.fill(0) 
+    
+    this.fps = 40
+    this.timer = setInterval(()=>{ 
+        that.next = true
+        that.emit('next') 
+    }, (1000/that.fps))
+  }
+
+  close() {
+    this.artnet.close();
+  }
+
+  pixelMatrix(x, y, red, green, blue) {
+    var led = 0
+
+    x = x%32
+    while (x > 15) {
+      led += 256
+      x -= 16
+    }
+
+    y = 15-y%16
+
+    if ((x % 2) === 1) led += x*16+15-y
+    else led += y+x*16
+
+    this.frame[led*3] = red;
+    this.frame[led*3+1] = green;
+    this.frame[led*3+2] = blue;
+  }
+
+  led(led, red, green, blue) {
+    this.frame[led*3] = red;
+    this.frame[led*3+1] = green;
+    this.frame[led*3+2] = blue;
+  }
+
+  clear() {
+    this.frame.fill(0)
+  }
+
+  draw() {
+    this.next = false
+    this.artnet.set(this.frame);
+  }
+}
+
+// ESP via USB over python bridge
 class SerialNode extends EventEmitter {
   constructor(path, nPixels) {
     super()
@@ -131,8 +194,12 @@ class SerialedController extends EventEmitter {
 
   addNode(path, nPixels) {
     var that = this
-
-    var esp = new SerialNode(path, nPixels)
+    var esp;
+    
+    if (path.startsWith('artnet://')) 
+        esp = new ArtnetNode(path.split('artnet://')[1], nPixels)
+    else 
+        esp = new SerialNode(path, nPixels)
 
     // Detect when all esp are ready to draw
     esp.on('next', ()=>{
