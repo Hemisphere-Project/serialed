@@ -1,7 +1,7 @@
 /*
-This example will receive multiple universes via Art-Net and control a strip of
-WS2812 LEDs via the FastLED library: https://github.com/FastLED/FastLED
-This example may be copied under the terms of the MIT license, see the LICENSE file for details
+  This example will receive multiple universes via Art-Net and control a strip of
+  WS2812 LEDs via the FastLED library: https://github.com/FastLED/FastLED
+  This example may be copied under the terms of the MIT license, see the LICENSE file for details
 */
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -12,12 +12,14 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #include <WiFiUdp.h>
 #include <ArtnetWifi.h>
 #include <FastLED.h>
+#include <ESPmDNS.h>
+#include <ArduinoOTA.h>
 
 // Wifi settings
-const char* ssid = "24watt";
-const char* password = "";
-IPAddress local_IP(192, 168, 43, 240);
-IPAddress gateway(192, 168, 43, 1);
+const char* ssid = "lpa-datafossile";
+const char* password = "jaures7519";
+IPAddress local_IP(10, 42, 0, 250);
+IPAddress gateway(10, 42, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 // LED settings
@@ -53,13 +55,13 @@ boolean ConnectWifi(void)
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    if (i > 20){
+    if (i > 20) {
       state = false;
       break;
     }
     i++;
   }
-  if (state){
+  if (state) {
     Serial.println("");
     Serial.print("Connected to ");
     Serial.println(ssid);
@@ -119,8 +121,17 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   for (int i = 0; i < length / 3; i++)
   {
     int led = i + (universe - startUniverse) * (previousDataLength / 3);
+    
+    // DIRTY FIX MISSING PIXEL !!!!
+    //if (led >= 40) led -= 1; 
+    // DIRTY FIX MISSING PIXEL !!!!
+    
     if (led < numLeds)
       leds[led] = CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
+
+    // DIRTY FIX MISSING PIXEL !!!!
+    //if (led == 2) leds[led] = CRGB::Black;
+    // DIRTY FIX MISSING PIXEL !!!!
   }
   previousDataLength = length;
 
@@ -129,14 +140,16 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
     FastLED.show();
     // Reset universeReceived to 0
     memset(universesReceived, 0, maxUniverses);
+    //Serial.println("draw");
   }
 }
 
 void setup()
 {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   bool connecteD = false;
-  while(!connecteD) connecteD = ConnectWifi();
+  while (!connecteD) connecteD = ConnectWifi();
+  ArduinoOTA.begin();
   artnet.begin();
   FastLED.addLeds<WS2812, dataPin, GRB>(leds, numLeds);
   initTest();
@@ -149,4 +162,5 @@ void loop()
 {
   // we call the read function inside the loop
   artnet.read();
+  ArduinoOTA.handle();
 }

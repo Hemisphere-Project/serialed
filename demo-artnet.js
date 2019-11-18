@@ -4,7 +4,7 @@ ctrl = new Serialed.SerialedController()
 RUN = true
 NPIX = 150
 
-ctrl.addNode('artnet://192.168.43.240', NPIX)
+ctrl.addNode('artnet://10.42.0.250', NPIX)
 
 
 /* CHASER FPS
