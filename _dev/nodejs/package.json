@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "npm": "^6.5.0",
+    "npm": "^6.13.4",
     "serialport": "^7.1.1"
   }
 }
